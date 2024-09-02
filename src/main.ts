@@ -30,38 +30,70 @@ const positions: object[] = []
 main();
 
 
+
 function dropPhase(positions: object[]) {
-  const newGemsPositions: object[] = [];
   for(let y = 0; y < boardTilesHeight; y++) {
     for(let x = 0; x < boardTilesWidth; x++) {
-      const index = boardTilesWidth * y + x;
-      if (positions[index]) { continue; }
+      const index = boardTilesWidth * boardTilesHeight + boardTilesWidth * y + x;
       const gem = gems[Math.floor(Math.random() * gemsAmount)];
       positions[index] = gem;
-      newGemsPositions.push(gem);
     }
   }
 
-  let counter = 1000;
-  requestAnimationFrame(function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    newGemsPositions.forEach((gem, index) => {
-      const offset = counter + index * 100;
-      if (offset <= 0) {
-        const x = (index % boardTilesWidth) * 200 + 10;
-        const y = (boardTilesWidth - 1 - Math.floor(index / boardTilesWidth)) * 200 + 10;
-        ctx.drawImage(gem.image, x, y, 180, 180);
-        return;
+  const gemsFallingHeight: number[] = [];
+  for(let x = 0; x < boardTilesWidth; x++) {
+    let solidGems:number = 0;
+    for(let y = 0; y < boardTilesHeight; y++) {
+      const index = boardTilesWidth * y + x;
+      if (positions[index]) {
+        solidGems += 1;
+      } else {
+        break;
       }
-      const x = (index % boardTilesWidth) * 200 + 10;
-      const y = (boardTilesWidth - 1 - Math.floor(index / boardTilesWidth)) * 200 + 10 - offset;
-      ctx.drawImage(gem.image, x, y, 180, 180);
-    })
-    counter -= 50;
-    if (counter + boardTilesWidth * boardTilesHeight * 100 > 0) {
-      requestAnimationFrame(render);
-    } else {
+    }
+    let fallingGems = boardTilesHeight - solidGems;
+    if (fallingGems === 0) { continue; }
+
+    let counter: number = 1;
+    while(fallingGems > 0) {
+      const offsetIndex = boardTilesWidth * (solidGems + counter) + x;
+      if (positions[offsetIndex]) {
+        positions[solidGems * boardTilesWidth + x] = positions[offsetIndex];
+        gemsFallingHeight[solidGems * boardTilesWidth + x] = counter;
+        fallingGems -= 1;
+        solidGems += 1;
+      } else {
+        counter += 1;
+      }
+    }
+  }
+  positions = positions.slice(0, boardTilesWidth * boardTilesHeight);
+
+  let timeCounter: number = 0;
+  requestAnimationFrame(function render() {
+    let animationFinished: boolean = true;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(let x = 0; x < boardTilesWidth; x++) {
+      for(let y = 0; y < boardTilesHeight; y++) {
+        const gem = positions[boardTilesWidth * y + x];
+        const index = boardTilesWidth * y + x;
+        const height = gemsFallingHeight[index] || 0;
+        let heightPixels = height * 200 - timeCounter;
+        if (heightPixels <= 0) {
+          heightPixels = 0;
+        } else {
+          animationFinished = false;
+        }
+        const xpixels = x * 200 + 10;
+        const ypixels = (boardTilesHeight - 1 - y) * 200 - heightPixels + 10;
+        ctx.drawImage(gem.image, xpixels, ypixels, 180, 180);
+      }
+    }
+    if (animationFinished) {
       explosionPhase(positions);
+    } else {
+      timeCounter += 20;
+      requestAnimationFrame(render);
     }
   })
 }
@@ -70,7 +102,6 @@ function explosionPhase(positions: object[]) {
   const checkForMatches = (indexes) => {
     let gemCount = 1;
     let gemName = positions[indexes[0]]?.name;
-    console.log(indexes[0], 0, gemCount, gemName)
     for(let i = 1; i <= indexes.length; i++) {
       if (gemName == positions[indexes[i]]?.name && i != indexes.length) {
         gemCount++;
@@ -83,7 +114,6 @@ function explosionPhase(positions: object[]) {
         gemCount = 1;
         gemName = positions[indexes[i]]?.name;
       }
-      console.log(indexes[i], gemCount, gemName)
     }
   }
 
@@ -104,13 +134,23 @@ function explosionPhase(positions: object[]) {
 
   matches.forEach((match, index) => { positions[index] = null; })
   if (matches.length > 0) {
-    console.log('next round', positions)
-    dropPhase(positions);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(let x = 0; x < boardTilesWidth; x++) {
+      for(let y = 0; y < boardTilesHeight; y++) {
+        const gem = positions[boardTilesWidth * y + x];
+        if (!gem) { continue; }
+        const xpixels = x * 200 + 10;
+        const ypixels = (boardTilesHeight - 1 - y) * 200 + 10;
+        ctx.drawImage(gem.image, xpixels, ypixels, 180, 180);
+      }
+    }
+    setTimeout(() => {
+      dropPhase(positions);
+    }, 1500);
   }
 }
 
 async function main() {
-
   canvas.width = 1000;
   canvas.height = 1000;
   canvas.style.width = '500px';
