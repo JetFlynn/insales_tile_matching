@@ -37,37 +37,11 @@ function playerPhase() {
 }
 
 function dropPhase() {
-  board.generateBonusPositions();
-
-  const gemsFallingHeight: number[] = [];
-  for(let x = 0; x < board.width; x++) {
-    let solidGems:number = 0;
-    for(let y = 0; y < board.height; y++) {
-      if (board.getGem(x, y)) {
-        solidGems += 1;
-      } else {
-        break;
-      }
-    }
-    let fallingGems = board.height - solidGems;
-    if (fallingGems === 0) { continue; }
-
-    let counter: number = 1;
-    while(fallingGems > 0) {
-      const fallingGem = board.getGem(x, solidGems + counter)
-      if (fallingGem) {
-        board.setGem(x, solidGems, fallingGem)
-        gemsFallingHeight[solidGems * board.width + x] = counter;
-        fallingGems -= 1;
-        solidGems += 1;
-      } else {
-        counter += 1;
-      }
-    }
-  }
+  board.recalculatePositions();
 
   let timeCounter: number = 0;
   requestAnimationFrame(function render() {
+    let offset: number = 0.1;
     canvasService.clear();
     let animationFinished: boolean = true;
     for(let x = 0; x < board.width; x++) {
@@ -75,11 +49,13 @@ function dropPhase() {
         const gem = board.getGem(x, y);
         if (!gem) { continue; }
 
-        const index = board.getIndex(x, y);
-        let height = (gemsFallingHeight[index] || 0) - timeCounter;
+        let timeline = timeCounter - offset;
+        if (timeline < 0) { timeline = 0; }
+        let height = board.getGemFallHeight(x, y) - timeline;
         if (height <= 0) { height = 0; }
         else { animationFinished = false; }
         canvasService.drawGem(x, y + height, gem);
+        offset += 0.1 * y;
       }
     }
     if (animationFinished) {
@@ -93,7 +69,6 @@ function dropPhase() {
 
 function explosionPhase() {
   const matches = board.sliceMatches();
-  console.log(matches)
   if (matches.length > 0) {
     canvasService.clear();
     for(let x = 0; x < board.width; x++) {

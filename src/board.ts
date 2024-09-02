@@ -1,51 +1,72 @@
 export class Board {
-  positions: (string | undefined)[]
+  gemsPositions: (string | undefined)[]
+  gemsFallHeight: number[]
   gems: string[]
   width: number
   height: number
+
   constructor(width: number, height: number, gems: string[]) {
     this.width = width;
     this.height = height;
     this.gems = gems;
-    this.positions = [];
-    this.generateBonusPositions()
+    this.gemsPositions = [];
+    this.gemsFallHeight = [];
   }
-  getGemByIndex(index: number) {
-    return this.positions[index];
+  getGem(x: number, y: number) : string | undefined {
+    return this.gemsPositions[y * this.width + x];
   }
-  setGemByIndex(index: number, gem: string) {
-    if (index < 0 || index >= this.width * this.height) { return; }
-    this.positions[index] = gem;
+  getGemFallHeight(x: number, y: number) : number {
+    return this.gemsFallHeight[y * this.width + x] || 0;
   }
-  getIndex(x: number, y: number) {
-    return y * this.width + x;
-  }
-  getGem(x: number, y: number) {
-    return this.positions[y * this.width + x];
-  }
-  setGem(x: number, y: number, gem: string | undefined) {
+  setGem(x: number, y: number, gem: string | undefined) : void {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) { return; }
-    this.positions[y * this.width + x] = gem;
+    this.gemsPositions[y * this.width + x] = gem;
   }
-  generateBonusPositions() {
+  recalculatePositions() {
     for(let i = 0; i < this.width * this.height; i++) {
       const gem = this.gems[Math.floor(Math.random() * this.gems.length)];
-      this.positions[this.width * this.height + i] = gem;
+      this.gemsPositions[this.width * this.height + i] = gem;
     }
+    this.gemsFallHeight = [];
+
+    for(let x = 0; x < this.width; x++) {
+      let lyingGems:number = 0;
+      for(let y = 0; y < this.height; y++) {
+        if (this.getGem(x, y)) {
+          lyingGems += 1;
+        } else {
+          break;
+        }
+      }
+      if (this.height === lyingGems) { continue; }
+
+      let counter: number = 1;
+      while(this.height > lyingGems) {
+        const fallingGem = this.getGem(x, lyingGems + counter)
+        if (fallingGem) {
+          this.setGem(x, lyingGems, fallingGem)
+          this.gemsFallHeight[lyingGems * this.width + x] = counter;
+          lyingGems += 1;
+        } else {
+          counter += 1;
+        }
+      }
+    }
+    this.gemsPositions = this.gemsPositions.slice(0, this.width * this.height);
   }
   sliceMatches() : (string | undefined)[] {
     const matches = this.getMatches();
-    matches.forEach((_match, index) => { this.positions[index] = undefined; })
+    matches.forEach((_match, index) => { this.gemsPositions[index] = undefined; })
     return matches
   }
   getMatches() : (string | undefined)[] {
     const checkForMatches = (indexes: number[]) => {
       let gemCount: number = 1;
-      let gemName: string | undefined = this.positions[indexes[0]];
+      let gemName: string | undefined = this.gemsPositions[indexes[0]];
       if (gemName === undefined) { throw new Error('Проверка на совпадения с незаполненными гемами') }
 
       for(let i = 1; i <= indexes.length; i++) {
-        if (gemName == this.positions[indexes[i]] && i != indexes.length) {
+        if (gemName == this.gemsPositions[indexes[i]] && i != indexes.length) {
           gemCount++;
         } else {
           if (gemCount >= 3) {
@@ -54,7 +75,7 @@ export class Board {
             }
           };
           gemCount = 1;
-          gemName = this.positions[indexes[i]]!;
+          gemName = this.gemsPositions[indexes[i]]!;
         }
       }
     }
