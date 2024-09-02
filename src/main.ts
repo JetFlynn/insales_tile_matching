@@ -33,7 +33,46 @@ canvasService.loadAssets().then(() => {
 })
 
 function playerPhase() {
+  requestAnimationFrame(function render() {
+    const hoverGemX = canvasService.hoverGemX;
+    const hoverGemY = canvasService.hoverGemY;
+    const activeGemX = canvasService.activeGemX;
+    const activeGemY = canvasService.activeGemY;
+    if (canvasService.isGemExchange) {
+      canvasService.isGemExchange = false;
+      let targetGemX: number, targetGemY: number
+      if (Math.abs(hoverGemX - activeGemX) != Math.abs(hoverGemY - activeGemY)) {
+        if (Math.abs(hoverGemX - activeGemX) > Math.abs(hoverGemY - activeGemY)) {
+          targetGemX = activeGemX - Math.sign(activeGemX - hoverGemX);
+          targetGemY = activeGemY;
+        } else {
+          targetGemX = activeGemX;
+          targetGemY = activeGemY - Math.sign(activeGemY - hoverGemY);
+        }
+        const firstGem = board.getGem(activeGemX, activeGemY);
+        const secondGem = board.getGem(targetGemX, targetGemY);
+        board.setGem(activeGemX, activeGemY, secondGem);
+        board.setGem(targetGemX, targetGemY, firstGem);
+        if (board.getMatches().length > 0) {
+          explosionPhase();
+          return;
+        } else {
+          board.setGem(activeGemX, activeGemY, firstGem);
+          board.setGem(targetGemX, targetGemY, secondGem);
+        }
+      }
+    }
+    canvasService.clear();
+    for(let x = 0; x < board.width; x++) {
+      for(let y = 0; y < board.height; y++) {
+        const gem = board.getGem(x, y);
+        if (!gem) { continue; }
 
+        canvasService.drawGem(x, y, gem);
+      }
+    }
+    requestAnimationFrame(render);
+  })
 }
 
 function dropPhase() {

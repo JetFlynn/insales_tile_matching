@@ -14,6 +14,12 @@ export class CanvasService {
   boardWidth: number
   boardHeight: number
   gems_images: Record<string, HTMLImageElement>
+  hoverGemX: number | undefined
+  hoverGemY: number | undefined
+  activeGemX: number | undefined
+  activeGemY: number | undefined
+  isGemExchange: boolean
+
   constructor(width: number, height: number, gems_info: GemInfo[]) {
     this.canvas = document.querySelector<HTMLCanvasElement>("#canvas")!;
     this.ctx = this.canvas.getContext("2d")!;
@@ -25,6 +31,27 @@ export class CanvasService {
     this.canvas.style.height = this.canvas.height * CANVAS_SCALE +'px';
     this.gems_info = gems_info;
     this.gems_images = {};
+    this.isGemExchange = false;
+
+    this.canvas.addEventListener('mousemove', (event) => {
+      const rect = this.canvas.getBoundingClientRect();
+      this.hoverGemX = Math.floor((event.clientX - rect.left) / (CANVAS_SCALE * CELL_SIZE));
+      this.hoverGemY = this.boardHeight - 1 - Math.floor((event.clientY - rect.top) / (CANVAS_SCALE * CELL_SIZE));
+    });
+
+    this.canvas.addEventListener('mouseout', () => {
+      this.hoverGemX = undefined;
+      this.hoverGemY = undefined;
+    });
+
+    this.canvas.addEventListener('mousedown', () => {
+      this.activeGemX = this.hoverGemX;
+      this.activeGemY = this.hoverGemY;
+    });
+
+    this.canvas.addEventListener('mouseup', () => {
+      this.isGemExchange = true;
+    });
   }
   drawGem(x: number, y: number, gem_name: string) {
     const xpixels = (0.05 + x) * CELL_SIZE;
