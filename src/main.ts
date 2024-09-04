@@ -34,16 +34,20 @@ canvasService.loadAssets().then(() => {
 
 function playerPhase() {
   requestAnimationFrame(function render() {
-    const hoverGemX = canvasService.hoverGemX;
-    const hoverGemY = canvasService.hoverGemY;
-    const activeGemX = canvasService.activeGemX;
-    const activeGemY = canvasService.activeGemY;
+    const hoverGemX: number | undefined = canvasService.hoverGemX;
+    const hoverGemY: number | undefined = canvasService.hoverGemY;
+    const activeGemX: number | undefined = canvasService.activeGemX;
+    const activeGemY: number | undefined = canvasService.activeGemY;
     canvasService.clear();
-    canvasService.drawBoard(board, [[hoverGemX, hoverGemY]]);
+    const exceptions = hoverGemX != undefined && hoverGemY != undefined ? [[hoverGemX, hoverGemY]] : undefined;
+    canvasService.drawBoard(board, exceptions);
     if (hoverGemX !== undefined && hoverGemY !== undefined) {
-      canvasService.drawGem(hoverGemX, hoverGemY, board.getGem(hoverGemX, hoverGemY), 1.2);
+      const gemName = board.getGem(hoverGemX, hoverGemY)
+      if (gemName !== undefined) {
+        canvasService.drawGem(hoverGemX, hoverGemY, gemName, 1.2);
+      }
     }
-    if (canvasService.isGemExchange) {
+    if (canvasService.isGemExchange && hoverGemX !== undefined && hoverGemY !== undefined && activeGemX !== undefined && activeGemY !== undefined) {
       canvasService.isGemExchange = false;
       let targetGemX: number, targetGemY: number
       if (Math.abs(hoverGemX - activeGemX) != Math.abs(hoverGemY - activeGemY)) {
@@ -72,6 +76,10 @@ function playerPhase() {
 function gemMovePhase(targetGemX: number, targetGemY: number, activeGemX: number, activeGemY: number) {
   const firstGem = board.getGem(activeGemX, activeGemY);
   const secondGem = board.getGem(targetGemX, targetGemY);
+  if (firstGem === undefined || secondGem === undefined) {
+    playerPhase();
+    return;
+  }
   board.setGem(activeGemX, activeGemY, secondGem);
   board.setGem(targetGemX, targetGemY, firstGem);
   if (board.getMatches().length > 0) {
