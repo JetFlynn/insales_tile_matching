@@ -54,12 +54,12 @@ export class Board {
     }
     this.gemsPositions = this.gemsPositions.slice(0, this.width * this.height);
   }
-  sliceMatches() : (string | undefined)[] {
-    const matches = this.getMatches();
-    matches.forEach((_match, index) => { this.gemsPositions[index] = undefined; })
+  sliceMatches() : number[][] {
+    const matches: number[][] = this.getMatches();
+    matches.forEach((match) => { this.setGem(match[0], match[1], undefined) })
     return matches
   }
-  getMatches() : (string | undefined)[] {
+  getMatches() : number[][] {
     const checkForMatches = (indexes: number[]) => {
       let gemCount: number = 1;
       let gemName: string | undefined = this.gemsPositions[indexes[0]];
@@ -71,7 +71,7 @@ export class Board {
         } else {
           if (gemCount >= 3) {
             for(let j = 1; j <= gemCount; j++) {
-              matches[indexes[i - j]] = gemName;
+              matchesPositions[indexes[i - j]] = gemName;
             }
           };
           gemCount = 1;
@@ -80,7 +80,7 @@ export class Board {
       }
     }
 
-    const matches: string[] = []
+    const matchesPositions: string[] = []
     const horizontalIndexes: Array<number>[] = []
     const verticalIndexes: Array<number>[] = []
 
@@ -94,7 +94,11 @@ export class Board {
     }
     horizontalIndexes.forEach((indexes) => { checkForMatches(indexes); })
     verticalIndexes.forEach((indexes) => { checkForMatches(indexes); })
-    return matches
+    const matches: number[][] = []
+    matchesPositions.forEach((_match, index) => {
+      matches.push([index % this.width, Math.floor(index / this.width)]);
+    })
+    return  matches
   }
 }
 

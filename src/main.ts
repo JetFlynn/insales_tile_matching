@@ -44,11 +44,10 @@ function playerPhase() {
     if (hoverGemX !== undefined && hoverGemY !== undefined) {
       const gemName = board.getGem(hoverGemX, hoverGemY)
       if (gemName !== undefined) {
-        canvasService.drawGem(hoverGemX, hoverGemY, gemName, 1.2);
+        canvasService.drawGem(hoverGemX, hoverGemY, gemName, 1);
       }
     }
     if (canvasService.isGemExchange && hoverGemX !== undefined && hoverGemY !== undefined && activeGemX !== undefined && activeGemY !== undefined) {
-      canvasService.isGemExchange = false;
       let targetGemX: number, targetGemY: number
       if (Math.abs(hoverGemX - activeGemX) != Math.abs(hoverGemY - activeGemY)) {
         if (Math.abs(hoverGemX - activeGemX) > Math.abs(hoverGemY - activeGemY)) {
@@ -62,6 +61,7 @@ function playerPhase() {
         canvasService.hoverGemY = undefined;
         canvasService.activeGemX = undefined;
         canvasService.activeGemY = undefined;
+        canvasService.isGemExchange = false;
 
         gemMovePhase(targetGemX, targetGemY, activeGemX, activeGemY);
       } else {
@@ -160,13 +160,30 @@ function dropPhase() {
 }
 
 function explosionPhase() {
-  const matches = board.sliceMatches();
+  const matches = board.getMatches();
   if (matches.length > 0) {
-    canvasService.clear();
-    canvasService.drawBoard(board);
-    setTimeout(() => {
-      dropPhase();
-    }, 300);
+    let animationLength = 300;
+    let startTime: undefined | number;
+    requestAnimationFrame(function render(timeStamp: number) {
+      if (!startTime) { startTime = timeStamp; }
+      let timePercent = (animationLength + startTime - timeStamp) / animationLength;
+      if (timePercent < 0) { timePercent = 0 }
+
+      canvasService.clear();
+      canvasService.drawBoard(board, matches);
+      matches.forEach((match) => {
+        const gem = board.getGem(match[0], match[1])
+        if (!gem) { return; }
+        canvasService.drawGem(match[0], match[1], gem, 0.9 * timePercent);
+      })
+
+      if (timePercent === 0) {
+        board.sliceMatches();
+        dropPhase();
+      } else {
+        requestAnimationFrame(render);
+      }
+    })
   } else {
     playerPhase();
   }

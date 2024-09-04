@@ -49,10 +49,10 @@ export class CanvasService {
     this.canvas.addEventListener('mousedown', () => {
       this.activeGemX = this.hoverGemX;
       this.activeGemY = this.hoverGemY;
+      this.isGemExchange = true;
     });
 
     this.canvas.addEventListener('mouseup', () => {
-      this.isGemExchange = true;
     });
   }
   drawGem(x: number, y: number, gem_name: string, scale: number = 0.9) {
