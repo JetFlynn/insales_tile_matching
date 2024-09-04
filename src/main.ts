@@ -60,6 +60,8 @@ function playerPhase() {
         canvasService.activeGemY = undefined;
 
         gemMovePhase(targetGemX, targetGemY, activeGemX, activeGemY);
+      } else {
+        requestAnimationFrame(render);
       }
     } else {
       requestAnimationFrame(render);
