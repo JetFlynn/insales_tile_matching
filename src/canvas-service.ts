@@ -1,3 +1,5 @@
+import { Board } from './board.ts';
+
 const CANVAS_SCALE = 0.5;
 const CELL_SIZE = 200;
 
@@ -53,10 +55,22 @@ export class CanvasService {
       this.isGemExchange = true;
     });
   }
-  drawGem(x: number, y: number, gem_name: string) {
-    const xpixels = (0.05 + x) * CELL_SIZE;
-    const ypixels = (this.boardHeight - 1 - y + 0.05) * CELL_SIZE;
-    this.ctx.drawImage(this.gems_images[gem_name], xpixels, ypixels, CELL_SIZE * 0.9, CELL_SIZE * 0.9);
+  drawGem(x: number, y: number, gem_name: string, scale: number = 0.9) {
+    const margin = (1 - scale) / 2;
+    const xpixels = (margin + x) * CELL_SIZE;
+    const ypixels = (this.boardHeight - 1 - y + margin) * CELL_SIZE;
+    this.ctx.drawImage(this.gems_images[gem_name], xpixels, ypixels, CELL_SIZE * scale, CELL_SIZE * scale);
+  }
+  drawBoard(board: Board, exceptions: number[][] = []) {
+    for(let x = 0; x < board.width; x++) {
+      for(let y = 0; y < board.height; y++) {
+        const gem = board.getGem(x, y);
+        if (!gem) { continue; }
+        if (exceptions.some((exception) => exception[0] == x && exception[1] == y)) { continue; }
+
+        this.drawGem(x, y, gem);
+      }
+    }
   }
   clear() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
