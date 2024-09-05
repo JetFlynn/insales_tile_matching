@@ -82,48 +82,67 @@ function gemMovePhase(targetGemX: number, targetGemY: number, activeGemX: number
   }
   board.setGem(activeGemX, activeGemY, secondGem);
   board.setGem(targetGemX, targetGemY, firstGem);
-  if (board.getMatches().length > 0) {
-    let animationLength = 200;
-    let startTime: undefined | number;
-    requestAnimationFrame(function render(timeStamp: number) {
-      if (!startTime) { startTime = timeStamp; }
-      let timePercent = (animationLength + startTime - timeStamp) / animationLength;
-      if (timePercent < 0) { timePercent = 0 }
 
-      canvasService.clear();
-      canvasService.drawBoard(board, [[activeGemX, activeGemY], [targetGemX, targetGemY]]);
-      canvasService.drawGem(activeGemX + (targetGemX - activeGemX) * timePercent, activeGemY + (targetGemY - activeGemY) * timePercent, secondGem);
-      canvasService.drawGem(targetGemX + (activeGemX - targetGemX) * timePercent, targetGemY + (activeGemY - targetGemY) * timePercent, firstGem);
-      if (timePercent === 0) {
-        explosionPhase();
-      } else {
-        requestAnimationFrame(render);
-      }
-    })
-  } else {
-    let animationLength = 200;
-    let startTime: undefined | number;
+  const animation = (timeFuction: Function, collback: Function, animationLength: number) => {
+    let startTime: number | undefined = undefined;
     requestAnimationFrame(function render(timeStamp: number) {
       if (!startTime) { startTime = timeStamp; }
       let timeCounter = timeStamp - startTime;
       let timePercent = timeCounter / animationLength;
-      if (timeCounter > animationLength) {
-        timePercent = (2 * animationLength - timeCounter) / animationLength;
-      }
+
+      const tArr: number[] = timeFuction(timePercent);
+      let tPos: number = tArr[0];
+      let tRot: number = tArr[1];
 
       canvasService.clear();
       canvasService.drawBoard(board, [[activeGemX, activeGemY], [targetGemX, targetGemY]]);
-      canvasService.drawGem(activeGemX + (targetGemX - activeGemX) * timePercent, activeGemY + (targetGemY - activeGemY) * timePercent, firstGem);
-      canvasService.drawGem(targetGemX + (activeGemX - targetGemX) * timePercent, targetGemY + (activeGemY - targetGemY) * timePercent, secondGem);
+      canvasService.drawGem(targetGemX + (activeGemX - targetGemX) * tPos, targetGemY + (activeGemY - targetGemY) * tPos, secondGem, 0.9 * (1 - tRot / 5));
+      canvasService.drawGem(activeGemX + (targetGemX - activeGemX) * tPos, activeGemY + (targetGemY - activeGemY) * tPos, firstGem, 0.9 * (1 + tRot / 10));
 
-      if (timeCounter >= 2 * animationLength) {
-        board.setGem(activeGemX, activeGemY, firstGem);
-        board.setGem(targetGemX, targetGemY, secondGem);
-        playerPhase();
+      if (timePercent >= 1) {
+        collback();
       } else {
         requestAnimationFrame(render);
       }
     })
+  }
+
+  if (board.getMatches().length > 0) {
+    animation((timePercent: number) => {
+      const arr: number[] = []
+      if (timePercent <= 0.5) {
+        arr[0] = timePercent;
+        arr[1] = timePercent * 2;
+      } else {
+        arr[0] = timePercent;
+        arr[1] = (0.5 - (timePercent - 0.5)) * 2;
+      }
+      return arr
+    }, () => {
+      explosionPhase();
+    }, 300);
+  } else {
+    animation((timePercent: number) => {
+      const arr: number[] = []
+      if (timePercent <= 0.25) {
+        arr[0] = timePercent * 2;
+        arr[1] = timePercent * 4;
+      } else if (timePercent <= 0.5) {
+        arr[0] = timePercent * 2;
+        arr[1] = (0.25 - (timePercent - 0.25)) * 4;
+      } else if (timePercent <= 0.75) {
+        arr[0] = (0.5 - (timePercent - 0.5)) * 2;
+        arr[1] = (timePercent - 0.5) * 4;
+      } else {
+        arr[0] = (0.5 - (timePercent - 0.5)) * 2;
+        arr[1] = (0.25 - (timePercent - 0.75)) * 4;
+      }
+      return arr
+    }, () => {
+      board.setGem(activeGemX, activeGemY, firstGem);
+      board.setGem(targetGemX, targetGemY, secondGem);
+      playerPhase();
+    }, 600);
   }
 }
 
