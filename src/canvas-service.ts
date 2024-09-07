@@ -2,6 +2,7 @@ import { Board } from './board.ts';
 
 const CANVAS_SCALE = 0.5;
 const CELL_SIZE = 200;
+const PANEL_HEIGHT = 100;
 
 type GemInfo = {
   name: string
@@ -28,7 +29,7 @@ export class CanvasService {
     this.boardWidth = width;
     this.boardHeight = height;
     this.canvas.width = CELL_SIZE * this.boardWidth;
-    this.canvas.height = CELL_SIZE * this.boardHeight;
+    this.canvas.height = CELL_SIZE * this.boardHeight + PANEL_HEIGHT;
     this.canvas.style.width = this.canvas.width * CANVAS_SCALE +'px';
     this.canvas.style.height = this.canvas.height * CANVAS_SCALE +'px';
     this.gems_info = gems_info;
@@ -38,7 +39,7 @@ export class CanvasService {
     this.canvas.addEventListener('mousemove', (event) => {
       const rect = this.canvas.getBoundingClientRect();
       this.hoverGemX = Math.floor((event.clientX - rect.left) / (CANVAS_SCALE * CELL_SIZE));
-      this.hoverGemY = this.boardHeight - 1 - Math.floor((event.clientY - rect.top) / (CANVAS_SCALE * CELL_SIZE));
+      this.hoverGemY = this.boardHeight - 1 - Math.floor((event.clientY - rect.top - PANEL_HEIGHT * CANVAS_SCALE) / (CANVAS_SCALE * CELL_SIZE));
     });
 
     this.canvas.addEventListener('mouseout', () => {
@@ -59,7 +60,14 @@ export class CanvasService {
     const margin = (1 - scale) / 2;
     const xpixels = (margin + x) * CELL_SIZE;
     const ypixels = (this.boardHeight - 1 - y + margin) * CELL_SIZE;
-    this.ctx.drawImage(this.gems_images[gem_name], xpixels, ypixels, CELL_SIZE * scale, CELL_SIZE * scale);
+    this.ctx.drawImage(this.gems_images[gem_name], xpixels, ypixels + PANEL_HEIGHT, CELL_SIZE * scale, CELL_SIZE * scale);
+  }
+  drawScore(score: number) {
+    this.ctx.fillStyle = "white";
+    this.ctx.fillRect(0, 0, this.canvas.width, PANEL_HEIGHT);
+    this.ctx.font = "48px serif";
+    this.ctx.fillStyle = "black";
+    this.ctx.fillText(score.toString(), this.canvas.width - this.ctx.measureText(score.toString()).width, PANEL_HEIGHT / 2 + 24);
   }
   drawBoard(board: Board, exceptions: number[][] = []) {
     for(let x = 0; x < board.width; x++) {
