@@ -2,24 +2,24 @@ import { Board } from './board.ts';
 import { CanvasService } from './canvas-service.ts';
 
 const GEMS_INFO = [
-  {
-    name: "CDEK",
-    src: "../images/logo-cdek.svg",
+  { name: "mails",
+    src: "../images/mails.svg",
     image: new Image()
   },
-  {
-    name: "Boxberry",
-    src: "../images/logo-boxberry.svg",
+  { name: "reviews",
+    src: "../images/reviews.svg",
     image: new Image()
   },
-  {
-    name: "Halva",
-    src: "../images/logo-halva.svg",
+  { name: "notifications",
+    src: "../images/notifications.svg",
     image: new Image()
   },
-  {
-    name: "Pochta",
-    src: "../images/logo-pochta.svg",
+  { name: "carts",
+    src: "../images/carts.svg",
+    image: new Image()
+  },
+  { name: "products",
+    src: "../images/products.svg",
     image: new Image()
   }
 ]
