@@ -74,8 +74,10 @@ export class CanvasService {
   }
   getCanvasGem(eventX: number, eventY: number) : Gem | undefined {
     const rect = this.canvas.getBoundingClientRect();
-    const x = Math.floor((eventX - rect.left) / (CANVAS_SCALE * CELL_SIZE));
-    const y = this.board.height - 1 - Math.floor((eventY - rect.top) / (CANVAS_SCALE * CELL_SIZE));
+    const cellX = this.canvas.offsetWidth / this.board.width;
+    const cellY = this.canvas.offsetHeight / this.board.height;
+    const x = Math.floor((eventX - rect.left) / cellX);
+    const y = this.board.height - 1 - Math.floor((eventY - rect.top) / cellY);
     const name = this.board.getGem(x, y)
     if (!name) { return undefined }
     return {x, y, name}
