@@ -2,7 +2,6 @@ import { Board } from './board';
 import { Gem, GemInfo } from './types'
 import images from './images'
 
-const CANVAS_SCALE = 0.5;
 const CELL_SIZE = 200;
 
 export class CanvasService {
