@@ -1,6 +1,6 @@
 {
   "name": "match3preloader",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "./dist/cjs/game-manager.js",
   "module": "./dist/esm/game-manager.js",
   "types": "./dist/esm/game-manager.d.ts",
