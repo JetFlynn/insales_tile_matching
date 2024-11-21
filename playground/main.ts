@@ -13,7 +13,7 @@ function updateScore(newValue: number) {
 }
 
 function createGame() {
-  match3 = new Match3Preloader('#gameCanvas', {}, {
+  match3 = new Match3Preloader('#gameCanvas', { score: 0 }, {
     scoreUpdate: updateScore
   });
 }

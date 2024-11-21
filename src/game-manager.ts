@@ -4,6 +4,10 @@ import { InputService } from './input-service';
 import { Gem, GemInfo } from './types'
 import images from './images'
 
+type Options = {
+  score?: number
+}
+
 const GEMS_INFO: GemInfo[] = [
   { name: "mails",
     src: images.mails,
@@ -26,6 +30,7 @@ const GEMS_INFO: GemInfo[] = [
     image: new Image()
   }
 ]
+
 const BOARD_WIDTH = 5;
 const BOARD_HEIGHT = 5;
 const HELP_THRESHOLD = 5;
@@ -47,12 +52,12 @@ export default class GameManager {
   private callbacks: Callbacks
   private lastFrame: ((timeStamp: number) => void) | undefined
 
-  constructor(selector: string, options?: object, callbacks?: Callbacks) {
+  constructor(selector: string, options?: Options, callbacks?: Callbacks) {
     this.board = new Board(BOARD_WIDTH, BOARD_HEIGHT, GEMS_INFO.map(gem => gem.name));
     this.canvasService = new CanvasService(selector, this.board, GEMS_INFO);;
     this.inputService = new InputService(this.canvasService);
     this.active = false;
-    this.score = 0;
+    this.score = options?.score || 0;
     this.playerInactiveTime = 0;
     this.firstPlayerPhase = true;
     this.callbacks = {
